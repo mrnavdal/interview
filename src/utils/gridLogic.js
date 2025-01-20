@@ -5,6 +5,7 @@ export class GridLogic {
     this.fieldControls = Array(sideSize).fill().map(() => Array(sideSize).fill(null));
     this.fibNeighborsMap = fibNeighborsMap;
     this.fieldsToHighlight = new Set();
+    this.isAnimating = false; // Add animation state flag
   }
 
   // Update single field
@@ -46,7 +47,7 @@ export class GridLogic {
         this.updateField(i, col, { color: 'white' });
       }
     }
-  
+
   }
 
   highlightFibonacciSequences() {
@@ -59,9 +60,9 @@ export class GridLogic {
   resetHighlightedFields() {
     this.fieldsToHighlight.forEach(pos => {
       const [r, c] = pos.split(',').map(Number);
-      this.updateField(r, c, { 
+      this.updateField(r, c, {
         color: 'white',
-        value: null 
+        value: null
       });
       this.fieldControls[r][c].value = null;
     });
@@ -77,7 +78,7 @@ export class GridLogic {
     const currentValue = currentField.value;
     const neighborValue = neighborField.value;
     let sequence = new Set([positions.current, positions.neighbor]);
-    
+
     // Generic check function that works for both directions
     const checkSequence = (startValue, nextValue, startPos, dir, isForward) => {
       let prevValue = startValue;
@@ -85,15 +86,15 @@ export class GridLogic {
       let pos = startPos;
 
       while (pos >= 0 && pos < this.sideSize) {
-        const nextField = positions.isRow ? 
-          this.fieldControls[positions.fixed][pos] : 
+        const nextField = positions.isRow ?
+          this.fieldControls[positions.fixed][pos] :
           this.fieldControls[pos][positions.fixed];
-          
+
         if (nextField && nextField.value === currentValue) {
           sequence.add(pos);
           // For forward check we add, for backward we subtract
-          const newValue = isForward ? 
-            prevValue + currentValue : 
+          const newValue = isForward ?
+            prevValue + currentValue :
             prevValue - currentValue;
           prevValue = currentValue;
           currentValue = newValue;
@@ -121,8 +122,8 @@ export class GridLogic {
     const neighborRow = row + rowDelta;
     const neighborCol = col + colDelta;
 
-    if (neighborRow >= 0 && neighborRow < this.sideSize && 
-        neighborCol >= 0 && neighborCol < this.sideSize) {
+    if (neighborRow >= 0 && neighborRow < this.sideSize &&
+      neighborCol >= 0 && neighborCol < this.sideSize) {
       const neighborField = this.fieldControls[neighborRow][neighborCol];
       if (neighborField && neighborField.value && neighbors.includes(neighborField.value)) {
         const positions = {
@@ -131,11 +132,11 @@ export class GridLogic {
           fixed: rowDelta === 0 ? row : col,
           isRow: rowDelta === 0
         };
-        const sequence = this.checkFibSequence(field, neighborField, 
+        const sequence = this.checkFibSequence(field, neighborField,
           rowDelta === 0 ? colDelta : rowDelta, positions);
         if (sequence) {
           sequence.forEach(pos => {
-            const posKey = rowDelta === 0 ? 
+            const posKey = rowDelta === 0 ?
               `${row},${pos}` : `${pos},${col}`;
             this.fieldsToHighlight.add(posKey);
           });
@@ -160,6 +161,8 @@ export class GridLogic {
 
   // Handle field click
   handleFieldClick(row, col) {
+    if (this.isAnimating) return; // Skip if animation is in progress
+
     // Update values and show yellow highlight
     this.updateLineValues(row, true);    // Update row
     this.updateLineValues(col, false, row);   // Update column
@@ -182,27 +185,34 @@ export class GridLogic {
   }
 
   async resetColorsWithDelay(row, col) {
-    await this.delay(500);
+    await this.delay(200);
     this.resetColors(row, col);
   }
 
   async highlightSequencesWithDelay() {
-    await this.delay(1000);
-    this.highlightFibonacciSequences();
+    if (this.fieldsToHighlight.size > 0) {
+      await this.delay(200);
+      this.highlightFibonacciSequences();
+    }
   }
 
   async resetHighlightWithDelay() {
-    await this.delay(2000);
-    this.resetHighlightedFields();
+    if (this.fieldsToHighlight.size > 0) {
+      await this.delay(500);
+      this.resetHighlightedFields();
+    }
   }
 
   async animateFieldChanges(row, col) {
+    this.isAnimating = true;
     try {
       await this.resetColorsWithDelay(row, col);
       await this.highlightSequencesWithDelay();
       await this.resetHighlightWithDelay();
     } catch (error) {
       console.error('Animation sequence failed:', error);
+    } finally {
+      this.isAnimating = false;
     }
   }
 } 
