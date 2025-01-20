@@ -107,10 +107,10 @@ export class GridLogic {
 
     if (neighborValue < currentValue) {
       checkSequence(currentValue, neighborValue, positions.neighbor, direction, false);
-      checkSequence(neighborValue, currentValue - neighborValue, positions.neighbor + direction, direction, true);
+      checkSequence(neighborValue, currentValue, positions.current, -direction, true);
     } else {
       checkSequence(currentValue, neighborValue, positions.neighbor, direction, true);
-      checkSequence(neighborValue, currentValue, positions.neighbor - direction, -direction, false);
+      checkSequence(neighborValue, currentValue, positions.current, -direction, false);
     }
 
     const finalSequence = Array.from(sequence).sort((a, b) => a - b);
@@ -134,6 +134,7 @@ export class GridLogic {
         };
         const sequence = this.checkFibSequence(field, neighborField,
           rowDelta === 0 ? colDelta : rowDelta, positions);
+          
         if (sequence) {
           sequence.forEach(pos => {
             const posKey = rowDelta === 0 ?
