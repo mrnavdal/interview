@@ -46,6 +46,7 @@ export class GridLogic {
         this.updateField(i, col, { color: 'white' });
       }
     }
+  
   }
 
   highlightFibonacciSequences() {
@@ -173,16 +174,35 @@ export class GridLogic {
     }
 
     // Animation sequence with timeouts
-    setTimeout(() => {
-      this.resetColors(row, col);
-      
-      setTimeout(() => {
-        this.highlightFibonacciSequences();
-        
-        setTimeout(() => {
-          this.resetHighlightedFields();
-        }, 3000);
-      }, 1000);
-    }, 2000);
+    return this.animateFieldChanges(row, col);
+  }
+
+  async delay(ms) {
+    return new Promise(resolve => setTimeout(resolve, ms));
+  }
+
+  async resetColorsWithDelay(row, col) {
+    await this.delay(500);
+    this.resetColors(row, col);
+  }
+
+  async highlightSequencesWithDelay() {
+    await this.delay(1000);
+    this.highlightFibonacciSequences();
+  }
+
+  async resetHighlightWithDelay() {
+    await this.delay(2000);
+    this.resetHighlightedFields();
+  }
+
+  async animateFieldChanges(row, col) {
+    try {
+      await this.resetColorsWithDelay(row, col);
+      await this.highlightSequencesWithDelay();
+      await this.resetHighlightWithDelay();
+    } catch (error) {
+      console.error('Animation sequence failed:', error);
+    }
   }
 } 
